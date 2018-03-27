@@ -157,38 +157,61 @@ Template.chat.events({
 	'submit #send-msg': function(event) {
 		event.preventDefault()
 
-		var currUser = Session.get('currentUser');
-		var clickedUser = Session.get('currentChat');
+		var currUserName = Session.get('currentUser');
+		var clickedUserName = Session.get('currentChat');
 
-		if(clickedUser) {
-			var user = Messages.findOne({ user: currUser });
-			var userChats = user['chats'];
+		var currUser = Messages.findOne({ user: currUserName });
+		var clickedUser = Messages.findOne({ user: clickedUserName });
 
-			userChats[clickedUser].push({
-				sender: currUser,
-				text: $('#messageInput').val()
-			});
+		var currUserChats = currUser['chats'];
+		var clickedUserChats = clickedUser['chats'];
 
-			Messages.update(user['_id'], {
-				$set: { chats: userChats },
-			});
+		var newMsg = {
+			id: currUserChats[clickedUserName].length,
+			sender: currUserName,
+			text: $('#messageInput').val()
+		};
 
-			user = Messages.findOne({ user: clickedUser });
-			userChats = user['chats'];
+		currUserChats[clickedUserName].push(newMsg);
+		clickedUserChats[currUserName].push(newMsg);
 
-			userChats[currUser].push({
-				sender: currUser,
-				text: $('#messageInput').val()
-			});
+		Messages.update(currUser['_id'], {
+			$set: { chats: currUserChats },
+		});
 
-			Messages.update(user['_id'], {
-				$set: { chats: userChats },
-			});
+		Messages.update(clickedUser['_id'], {
+			$set: { chats: clickedUserChats },
+		});
 
-			$('#messageInput').val('');
-		}
+		$('#messageInput').val('');
 	},
-	'click .delete-msg': function() {
-		console.log("DELETE");
+	'click .delete-msg': function(event) {
+		var msgIndex = $(event.target).attr('id');
+
+		var currUserName = Session.get('currentUser');
+		var clickedUserName = Session.get('currentChat');
+
+		var currUser = Messages.findOne({ user: currUserName });
+		var clickedUser = Messages.findOne({ user: clickedUserName });
+
+		var currUserChats = currUser['chats'];
+		var clickedUserChats = clickedUser['chats'];
+
+		currUserChats[clickedUserName].splice(msgIndex, 1);
+		clickedUserChats[currUserName].splice(msgIndex, 1);
+
+		var numMsgs = currUserChats[clickedUserName].length;
+		for(var i = 0; i < numMsgs; ++i) {
+			currUserChats[clickedUserName][i]['id'] = i;
+			clickedUserChats[currUserName][i]['id'] = i;
+		}
+
+		Messages.update(currUser['_id'], {
+			$set: { chats: currUserChats },
+		});
+
+		Messages.update(clickedUser['_id'], {
+			$set: { chats: clickedUserChats },
+		});
 	},
 });
