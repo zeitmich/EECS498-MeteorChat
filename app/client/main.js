@@ -7,7 +7,7 @@ import './main.html';
 
 Template.main.onCreated(function() {
 	Session.set('currentUser', '');
-	//Meteor.call('clearMessages');
+	Meteor.call('clearMessages');
 });
 
 Template.main.helpers({
