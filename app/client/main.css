@@ -1,1 +1,20 @@
-/* CSS declarations go here */
+html, body {
+	font-family: Arial, sans-serif;
+}
+
+.error {
+	margin-top: 20px;
+	padding: 15px;
+	border-radius: 10px;
+	width: 300px;
+	font-weight: bold;
+	background-color: lightpink;
+}
+
+#login-error {
+	display: none;
+}
+
+#signup-error {
+	display: none;
+}

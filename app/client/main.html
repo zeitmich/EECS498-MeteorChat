@@ -1,25 +1,48 @@
 <head>
-  <title>app</title>
+	<title>EECS498 MeteorChat</title>
 </head>
 
 <body>
-  <h1>Welcome to Meteor!</h1>
-
-  {{> hello}}
-  {{> info}}
+	{{> main }}
 </body>
 
-<template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+<template name="main">
+	{{#if getCurrentUser}}
+		{{> chat}}
+	{{else}}
+		{{> login}}
+	{{/if}}
 </template>
 
-<template name="info">
-  <h2>Learn Meteor!</h2>
-  <ul>
-    <li><a href="https://www.meteor.com/try" target="_blank">Do the Tutorial</a></li>
-    <li><a href="http://guide.meteor.com" target="_blank">Follow the Guide</a></li>
-    <li><a href="https://docs.meteor.com" target="_blank">Read the Docs</a></li>
-    <li><a href="https://forums.meteor.com" target="_blank">Discussions</a></li>
-  </ul>
+<template name="login">
+	<h1>Welcome to MeteorChat!</h1>
+	<h2>Login</h2>
+	<form id="login-user">
+		<input type="text" name="loginUser" placeholder="Enter username">
+		<input type="submit" value="Login">
+	</form>
+	<div class="error" id="login-error">
+		{{ getLoginError }}
+	</div>
+	<h2>Sign Up</h2>
+	<form id="signup-user">
+		<input type="text" name="signupUser" placeholder="Enter username">
+		<input type="submit" value="Sign up">
+	</form>
+	<div class="error" id="signup-error">
+		{{ getSignupError }}
+	</div>
+</template>
+
+<template name="chat">
+	<h2>Welcome {{ getCurrentUser }}!</h2>
+	<div class="user-list">
+		{{#if getNumChats}}
+			{{#each getUsers}}
+				<div>{{ username }}</div>
+			{{/each}}
+		{{else}}
+			<span>Invite your friends to chat!</span>
+		{{/if}}
+	</div>
 </template>
