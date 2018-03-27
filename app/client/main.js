@@ -1,4 +1,4 @@
-import { Users } from '/api/Users';
+import { Messages } from '/api/Messages';
 import { Session } from 'meteor/session';
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
@@ -7,7 +7,7 @@ import './main.html';
 
 Template.main.onCreated(function() {
 	Session.set('currentUser', '');
-	//Meteor.call('clearUsers');
+	//Meteor.call('clearMessages');
 });
 
 Template.main.helpers({
@@ -39,7 +39,7 @@ Template.login.events({
 		var newUsername = event.target.loginUser.value;
 
 		if(newUsername) {
-			var userExists = Users.find({ username: newUsername }).count();
+			var userExists = Messages.find({ user: newUsername }).count();
 
 			if(userExists) {
 				Session.set('currentUser', newUsername);
@@ -64,18 +64,35 @@ Template.login.events({
 		var newUsername = event.target.signupUser.value;
 
 		if(newUsername) {
-			var userExists = Users.find({ username: newUsername }).count();
+			var userExists = Messages.find({ user: newUsername }).count();
 
 			if(userExists) {
 				Template.instance().signupError.set("Error: Username already exists");
 				$('#signup-error').css('display', 'block');
 			}
 			else {
-				Users.insert({
-					username: newUsername
-				});
-
 				Session.set('currentUser', newUsername);
+
+				var newUserChats = {};
+				var allUsers = Messages.find().fetch();
+
+				for(var i = 0; i < allUsers.length; ++i) {
+					var user = allUsers[i];
+
+					var userChats = user['chats'];
+					userChats[newUsername] = [];
+
+					Messages.update(user['_id'], {
+						$set: { chats: userChats },
+					});
+
+					newUserChats[user['user']] = [];
+				}
+
+				Messages.insert({
+					user: newUsername,
+					chats: newUserChats
+				});
 
 				$('#signup-error').css('display', 'none');
 			}
@@ -87,16 +104,91 @@ Template.login.events({
 	},
 });
 
+Template.chat.onCreated(function() {
+	Session.set('currentChat', '');
+});
+
 Template.chat.helpers({
 	getCurrentUser() {
 		return Session.get('currentUser');
 	},
 	getNumChats() {
 		var currUser = Session.get('currentUser');
-		return Users.find({ username: { $ne: currUser } }).count();
+		return Messages.find({ user: { $ne: currUser } }).count();
 	},
 	getUsers() {
 		var currUser = Session.get('currentUser');
-		return Users.find({ username: { $ne: currUser } }).fetch();
+		return Messages.find({ user: { $ne: currUser } }).fetch();
+	},
+	getClickedUser() {
+		return Session.get('currentChat');
+	},
+	getMessages() {
+		var currUser = Session.get('currentUser');
+		var clickedUser = Session.get('currentChat');
+
+		if(clickedUser) {
+			var user = Messages.findOne({ user: currUser });
+			return user['chats'][clickedUser];
+		}
+
+		return [];
+	},
+});
+
+Template.chat.events({
+	'click #logout': function(event) {
+		event.preventDefault();
+
+		Session.set('currentUser', '');
+	},
+	'click .user': function(event) {
+		var oldUser = Session.get('currentChat');
+
+		if(oldUser) {
+			$('#' + oldUser).removeClass('selected');
+		}
+
+		var clickedUser = $(event.target).text();
+		$('#' + clickedUser).addClass('selected');
+
+		Session.set('currentChat', clickedUser);
+	},
+	'submit #send-msg': function(event) {
+		event.preventDefault()
+
+		var currUser = Session.get('currentUser');
+		var clickedUser = Session.get('currentChat');
+
+		if(clickedUser) {
+			var user = Messages.findOne({ user: currUser });
+			var userChats = user['chats'];
+
+			userChats[clickedUser].push({
+				sender: currUser,
+				text: $('#messageInput').val()
+			});
+
+			Messages.update(user['_id'], {
+				$set: { chats: userChats },
+			});
+
+			user = Messages.findOne({ user: clickedUser });
+			userChats = user['chats'];
+
+			userChats[currUser].push({
+				sender: currUser,
+				text: $('#messageInput').val()
+			});
+
+			Messages.update(user['_id'], {
+				$set: { chats: userChats },
+			});
+
+			$('#messageInput').val('');
+		}
+	},
+	'click .delete-msg': function() {
+		console.log("DELETE");
 	},
 });

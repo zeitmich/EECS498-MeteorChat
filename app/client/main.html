@@ -35,14 +35,38 @@
 </template>
 
 <template name="chat">
-	<h2>Welcome {{ getCurrentUser }}!</h2>
-	<div class="user-list">
-		{{#if getNumChats}}
-			{{#each getUsers}}
-				<div>{{ username }}</div>
-			{{/each}}
-		{{else}}
-			<span>Invite your friends to chat!</span>
-		{{/if}}
+	<h1>Welcome {{ getCurrentUser }}!</h1>
+	<button id="logout">Logout</button>
+	<h3>Select a friend to chat with:</h3>
+	<div class="msg-view">
+		<div class="user-list">
+			{{#if getNumChats}}
+				{{#each getUsers}}
+					<div class="user" id="{{ user }}">{{ user }}</div>
+				{{/each}}
+			{{else}}
+				<span>Invite your friends to chat!</span>
+			{{/if}}
+		</div>
+		<div class="msg-div">
+			{{#if getClickedUser}}
+				<div class="msg-list">
+					{{#each getMessages}}
+						<div class="message">
+							<b>{{ sender }}:</b> {{ text }}
+							<span class="delete-msg">&times;</span>
+						</div>
+					{{/each}}
+				</div>
+				<div class="add-msg">
+					<form id="send-msg">
+						<input type="text" id="messageInput" name="messageText" placeholder="Type your message">
+						<input type="submit" value="Send">
+					</form>
+				</div>
+			{{else}}
+				<span class="msg-list empty">No user selected</span>
+			{{/if}}
+		</div>
 	</div>
 </template>
